@@ -1,0 +1,237 @@
+@import "tailwindcss";
+
+/* ========================================
+   CEYLONMART PRO — DESIGN SYSTEM
+   Redesign: Twisty Dashboard (Clean Minimal Light)
+   ======================================== */
+
+@theme inline {
+  --color-surface: #fdfdfd;       /* primary card/surface background */
+  --color-page-bg: #e8eaec;       /* page background, hover states, input fills */
+  --color-border: #d2d6db;        /* borders, dividers, track backgrounds */
+  --color-muted: #b7bac3;         /* muted icons, placeholder text */
+  --color-secondary: #8892a9;     /* secondary labels, nav text, timestamps */
+  --color-accent: #845c58;        /* primary accent (active states, CTAs, chart lines) */
+
+  /* Specific Deltas/Status colors requested */
+  --color-delta-pos-text: #3a7d5e;
+  --color-delta-pos-bg: #e8f4ef;
+  --color-delta-neg-text: #b34040;
+  --color-delta-neg-bg: #faeaea;
+  
+  --color-status-pending-text: #9b6e1a;
+  --color-status-pending-bg: #fef6e8;
+
+  /* shadcn/ui base overwrites for compatibility */
+  --color-background: #e8eaec;
+  --color-foreground: #111827;
+  --color-card: #fdfdfd;
+  --color-card-foreground: #111827;
+  --color-primary: #845c58;
+  --color-primary-foreground: #ffffff;
+  --color-muted-foreground: #8892a9;
+  
+  --radius-card: 14px;
+  --radius-pill: 20px;
+
+  --font-body: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sinhala: 'Noto Sans Sinhala', sans-serif;
+  --font-tamil: 'Noto Sans Tamil', sans-serif;
+
+  --sidebar-width: 210px;
+  --topbar-height: 72px;
+}
+
+/* ========================================
+   BASE STYLES
+   ======================================== */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-page-bg);
+  color: #111827;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  font-weight: 400;
+}
+
+/* All headings capped at 500 weight, no bold (600+) used */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-body);
+  font-weight: 500;
+  color: #111827;
+}
+
+/* Section Headers: Uppercase 9-10px letter-spaced */
+.section-header {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-secondary);
+  font-weight: 500;
+}
+
+/* Value text: 500 weight */
+.value-text {
+  font-weight: 500;
+}
+
+/* ========================================
+   CARDS & CONTAINERS
+   ======================================== */
+
+.card-container {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 16px 18px;
+}
+
+/* No card-within-card styling */
+.list-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+}
+
+/* ========================================
+   BUTTONS & INPUTS
+   ======================================== */
+
+.btn-primary {
+  background-color: var(--color-accent);
+  color: #ffffff;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.input-field {
+  background-color: var(--color-page-bg);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 10px 16px;
+  color: #111827;
+  font-size: 14px;
+  width: 100%;
+  outline: none;
+}
+.input-field::placeholder {
+  color: var(--color-muted);
+}
+
+/* ========================================
+   PILLS & STATUS BADGES
+   ======================================== */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.pill-positive {
+  background-color: var(--color-delta-pos-bg);
+  color: var(--color-delta-pos-text);
+}
+
+.pill-negative {
+  background-color: var(--color-delta-neg-bg);
+  color: var(--color-delta-neg-text);
+}
+
+.pill-pending {
+  background-color: var(--color-status-pending-bg);
+  color: var(--color-status-pending-text);
+}
+
+.pill-neutral {
+  background-color: var(--color-page-bg);
+  color: var(--color-secondary);
+}
+
+/* ========================================
+   SIDEBAR
+   ======================================== */
+
+.sidebar {
+  width: var(--sidebar-width);
+  height: 100vh;
+  background-color: #ffffff;
+  border-right: 1px solid var(--color-border);
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 40;
+  overflow-y: auto;
+}
+
+.sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: var(--color-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  margin: 2px 0;
+}
+
+.sidebar-nav-item:hover {
+  background-color: var(--color-page-bg);
+}
+
+.sidebar-nav-item.active {
+  background-color: #f3eded;
+  color: var(--color-accent);
+}
+
+.sidebar-nav-item.active svg {
+  color: var(--color-accent);
+}
+
+.sidebar-nav-item svg {
+  color: var(--color-muted);
+  stroke-width: 1.3px;
+  width: 18px;
+  height: 18px;
+}
+
+/* ========================================
+   TOPBAR
+   ======================================== */
+
+.topbar {
+  height: var(--topbar-height);
+  background-color: #ffffff;
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: var(--sidebar-width);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
