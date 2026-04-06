@@ -5,23 +5,21 @@ import { MobileNav } from '@/components/layout/MobileNav'
 
 export function DashboardLayout() {
   return (
-    <div className="min-h-screen bg-[var(--color-page-bg)]">
+    <div style={{ background: 'var(--bg-base)', minHeight: '100vh' }}>
+      {/* Desktop sidebar */}
       <div className="hidden md:block">
         <Sidebar />
       </div>
 
+      {/* Mobile drawer */}
       <MobileNav />
+
+      {/* Topbar */}
       <Topbar />
 
-      <main
-        className="pt-[var(--topbar-height)] transition-all duration-300"
-        style={{
-          marginLeft: typeof window !== 'undefined' && window.innerWidth >= 768
-            ? 'var(--sidebar-width)'
-            : '0',
-        }}
-      >
-        <div className="p-[18px] md:p-[20px] max-w-[1600px] mx-auto">
+      {/* Main content */}
+      <main className="page-content">
+        <div className="page-inner">
           <Outlet />
         </div>
       </main>

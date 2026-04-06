@@ -1,11 +1,16 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { DashboardLayout } from '@/layouts/DashboardLayout'
 import { AuthLayout } from '@/layouts/AuthLayout'
+import { useAuthStore } from '@/store/authStore'
+import { useSettingsStore } from '@/store/settingsStore'
+import { Loader2 } from 'lucide-react'
 
 // Auth Pages
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { RegisterPage } from '@/pages/auth/RegisterPage'
 import { OnboardingPage } from '@/pages/auth/OnboardingPage'
+import { LandingPage } from '@/pages/LandingPage'
 
 // Dashboard Pages
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
@@ -45,19 +50,58 @@ import { BranchesPage } from '@/pages/branches/BranchesPage'
 import { SettingsPage } from '@/pages/settings/SettingsPage'
 
 function App() {
+  const { initializeAuth, isAuthenticated, isLoading, user } = useAuthStore()
+  const { darkMode } = useSettingsStore()
+
+  useEffect(() => {
+    initializeAuth()
+  }, [initializeAuth])
+
+  // Sync Global Theme
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.remove('light-mode')
+    } else {
+      document.documentElement.classList.add('light-mode')
+    }
+  }, [darkMode])
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-[#0c0c0c] font-sans">
+        <Loader2 className="animate-spin text-[#22c55e]" size={32} />
+      </div>
+    )
+  }
+
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={!isAuthenticated ? <LandingPage /> : <Navigate to="/dashboard" replace />} />
+
         {/* Auth Routes */}
         <Route element={<AuthLayout />}>
-          <Route path="/auth/login" element={<LoginPage />} />
-          <Route path="/auth/register" element={<RegisterPage />} />
-          <Route path="/auth/onboarding" element={<OnboardingPage />} />
+          <Route path="/auth/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" replace />} />
+          <Route path="/auth/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/dashboard" replace />} />
+          <Route path="/auth/onboarding" element={isAuthenticated ? <OnboardingPage /> : <Navigate to="/auth/login" />} />
         </Route>
 
         {/* Dashboard Routes */}
-        <Route element={<DashboardLayout />}>
-          <Route path="/" element={<DashboardPage />} />
+        <Route 
+          element={
+            isAuthenticated ? (
+              user?.organization_id ? (
+                <DashboardLayout />
+              ) : (
+                <Navigate to="/auth/onboarding" />
+              )
+            ) : (
+              <Navigate to="/auth/login" />
+            )
+          }
+        >
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/pos" element={<POSPage />} />
 
           {/* Inventory */}
