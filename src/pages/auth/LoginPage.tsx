@@ -1,9 +1,59 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
-import { Mail, Lock, Globe } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Mail, Lock, Globe, Loader2 } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 
 export function LoginPage() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (authError) throw authError
+
+      if (data.user) {
+        // Check if user has an organization
+        const { data: profile } = await (supabase
+          .from('profiles') as any)
+          .select('organization_id')
+          .eq('id', data.user.id)
+          .single()
+
+        if (profile?.organization_id) {
+          navigate('/')
+        } else {
+          navigate('/auth/onboarding')
+        }
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to sign in')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleGoogleLogin = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin
+      }
+    })
+  }
 
   return (
     <div className="space-y-6">
@@ -16,7 +66,13 @@ export function LoginPage() {
         </p>
       </div>
 
-      <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+      {error && (
+        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm text-center">
+          {error}
+        </div>
+      )}
+
+      <form className="space-y-4" onSubmit={handleLogin}>
         <div>
           <label className="block text-sm font-medium text-[var(--color-warm-dim)] mb-1.5">
             {t('auth.email')}
@@ -25,8 +81,11 @@ export function LoginPage() {
             <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)]" />
             <input
               type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="you@company.lk"
               className="input-field pl-10"
+              required
             />
           </div>
         </div>
@@ -47,18 +106,22 @@ export function LoginPage() {
             <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)]" />
             <input
               type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               className="input-field pl-10"
+              required
             />
           </div>
         </div>
 
-        <Link
-          to="/"
-          className="btn-primary w-full py-3 text-center block"
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="btn-primary w-full py-3 flex items-center justify-center gap-2"
         >
-          {t('auth.sign_in')}
-        </Link>
+          {isLoading ? <Loader2 size={18} className="animate-spin" /> : t('auth.sign_in')}
+        </button>
       </form>
 
       <div className="relative">
@@ -73,11 +136,15 @@ export function LoginPage() {
       </div>
 
       <div className="space-y-3">
-        <button className="btn-ghost w-full flex items-center justify-center gap-2 py-2.5">
+        <button 
+          onClick={handleGoogleLogin}
+          type="button" 
+          className="btn-ghost w-full flex items-center justify-center gap-2 py-2.5"
+        >
           <Globe size={18} className="text-[var(--color-primary)]" />
           {t('auth.google')}
         </button>
-        <button className="btn-ghost w-full flex items-center justify-center gap-2 py-2.5">
+        <button type="button" className="btn-ghost w-full flex items-center justify-center gap-2 py-2.5">
           <Mail size={18} className="text-[var(--color-primary)]" />
           {t('auth.magic_link')}
         </button>
@@ -92,3 +159,4 @@ export function LoginPage() {
     </div>
   )
 }
+
