@@ -7,10 +7,12 @@ interface SettingsState {
   language: Language
   sidebarCollapsed: boolean
   sidebarOpen: boolean // for mobile
+  darkMode: boolean
 
   setLanguage: (lang: Language) => void
   toggleSidebar: () => void
   setSidebarOpen: (open: boolean) => void
+  toggleDarkMode: () => void
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -19,6 +21,7 @@ export const useSettingsStore = create<SettingsState>()(
       language: 'en',
       sidebarCollapsed: false,
       sidebarOpen: false,
+      darkMode: true, // Default to Dark mode
 
       setLanguage: (language) => set({ language }),
 
@@ -27,6 +30,9 @@ export const useSettingsStore = create<SettingsState>()(
 
       setSidebarOpen: (sidebarOpen) =>
         set({ sidebarOpen }),
+
+      toggleDarkMode: () =>
+        set((state) => ({ darkMode: !state.darkMode })),
     }),
     {
       name: 'ceylonmart-settings',
