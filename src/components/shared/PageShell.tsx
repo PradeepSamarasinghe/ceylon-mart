@@ -13,45 +13,93 @@ export function PageShell({ titleKey, descriptionKey, icon: Icon, children, acti
   const { t } = useTranslation()
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-start justify-between animate-fade-up">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-[rgba(232,160,69,0.1)]">
-            <Icon size={24} className="text-[var(--color-primary)]" />
+    <div>
+      {/* Page header */}
+      <div
+        className="page-header animate-fade-up"
+        style={{ opacity: 0, animationFillMode: 'forwards' }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div
+            style={{
+              width: 32, height: 32,
+              borderRadius: 'var(--r-sm)',
+              background: 'var(--accent-subtle)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <Icon size={15} style={{ color: 'var(--accent)' }} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold font-[family-name:var(--font-display)]">
-              {t(titleKey)}
-            </h1>
+            <h1 className="page-title">{t(titleKey)}</h1>
             {descriptionKey && (
-              <p className="text-sm text-[var(--color-muted)] mt-0.5">
-                {t(descriptionKey)}
-              </p>
+              <p className="page-subtitle">{t(descriptionKey)}</p>
             )}
           </div>
         </div>
-        {actions && <div className="flex items-center gap-2">{actions}</div>}
+        {actions && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {actions}
+          </div>
+        )}
       </div>
 
-      {/* Kandyan Band */}
-      <div className="kandyan-band" />
-
       {/* Content */}
-      {children || (
-        <div className="glass-card-static p-12 text-center animate-fade-up delay-200" style={{ opacity: 0, animationFillMode: 'forwards' }}>
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[rgba(232,160,69,0.08)] flex items-center justify-center">
-            <Icon size={32} className="text-[var(--color-primary)] opacity-60" />
+      {children ?? (
+        <div
+          className="card animate-fade-up delay-100"
+          style={{
+            opacity: 0, animationFillMode: 'forwards',
+            padding: 48,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            minHeight: 320,
+          }}
+        >
+          <div
+            style={{
+              width: 48, height: 48,
+              borderRadius: 'var(--r-md)',
+              background: 'var(--bg-subtle)',
+              border: '1px solid var(--border-weak)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 16,
+            }}
+          >
+            <Icon size={22} style={{ color: 'var(--text-tertiary)' }} />
           </div>
-          <h3 className="text-lg font-semibold text-[var(--color-warm)] mb-2">
+          <p style={{
+            fontWeight: 600,
+            fontSize: '0.9375rem',
+            color: 'var(--text-primary)',
+            fontFamily: 'var(--font-sans)',
+            marginBottom: 6,
+          }}>
             {t(titleKey)}
-          </h3>
-          <p className="text-sm text-[var(--color-muted)] max-w-md mx-auto">
-            This module is ready for Phase 2+ implementation. The full UI, data tables, forms, and business logic will be built progressively.
           </p>
-          <div className="mt-6 flex items-center justify-center gap-2">
-            <span className="badge badge-primary">Coming Soon</span>
-          </div>
+          <p style={{
+            fontSize: '0.875rem',
+            color: 'var(--text-tertiary)',
+            maxWidth: 380,
+            lineHeight: 1.6,
+            fontFamily: 'var(--font-sans)',
+          }}>
+            This module is ready for implementation. The full UI and business logic will be built progressively.
+          </p>
+          <span
+            className="badge badge-neutral"
+            style={{ marginTop: 16, fontSize: '0.75rem', padding: '4px 12px' }}
+          >
+            Phase 2+
+          </span>
         </div>
       )}
     </div>
