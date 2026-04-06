@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import {
   Store,
   Pill,
@@ -15,13 +15,36 @@ import {
   Crown,
   Sparkles,
   Zap,
+  Loader2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { supabase } from '@/lib/supabase'
+import { useAuthStore } from '@/store/authStore'
 
 export function OnboardingPage() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { user, setUser, setOrganization, setBranch } = useAuthStore()
+
   const [step, setStep] = useState(1)
-  const [selectedType, setSelectedType] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Form State
+  const [orgData, setOrgData] = useState({
+    name: '',
+    name_si: '',
+    name_ta: '',
+    business_type: 'retail',
+    vat_number: '',
+  })
+
+  const [branchData, setBranchData] = useState({
+    name: 'Main Branch',
+    address: '',
+    is_headquarters: true,
+  })
+
   const [selectedPlan, setSelectedPlan] = useState('growth')
 
   const businessTypes = [
@@ -60,6 +83,64 @@ export function OnboardingPage() {
     },
   ]
 
+  const handleComplete = async () => {
+    if (!user) return
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      // 1. Create Organization
+      const { data: org, error: orgError } = await (supabase
+        .from('organizations') as any)
+        .insert({
+          name: orgData.name,
+          name_si: orgData.name_si || null,
+          name_ta: orgData.name_ta || null,
+          business_type: orgData.business_type,
+          vat_number: orgData.vat_number || null,
+          owner_id: user.id,
+          plan: selectedPlan
+        })
+        .select()
+        .single()
+
+      if (orgError) throw orgError
+
+      // 2. Create Initial Branch
+      const { data: branch, error: branchError } = await (supabase
+        .from('branches') as any)
+        .insert({
+          name: branchData.name,
+          address: branchData.address || null,
+          is_headquarters: branchData.is_headquarters,
+          organization_id: org.id
+        })
+        .select()
+        .single()
+
+      if (branchError) throw branchError
+
+      // 3. Update User Profile with organization_id
+      const { error: profileError } = await (supabase
+        .from('profiles') as any)
+        .update({ organization_id: org.id })
+        .eq('id', user.id)
+
+      if (profileError) throw profileError
+
+      // 4. Update local state
+      setOrganization(org as any)
+      setBranch(branch as any)
+      setUser({ ...user, organization_id: org.id } as any)
+
+      navigate('/')
+    } catch (err: any) {
+      setError(err.message || 'Failed to complete onboarding')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Step indicator */}
@@ -90,6 +171,12 @@ export function OnboardingPage() {
         ))}
       </div>
 
+      {error && (
+        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm text-center">
+          {error}
+        </div>
+      )}
+
       {/* Step 1: Organization */}
       {step === 1 && (
         <div className="space-y-5 animate-fade-in">
@@ -101,7 +188,14 @@ export function OnboardingPage() {
             <label className="block text-sm font-medium text-[var(--color-warm-dim)] mb-1.5">
               {t('onboarding.business_name')} *
             </label>
-            <input type="text" className="input-field" placeholder="My Business Name" />
+            <input 
+              type="text" 
+              className="input-field" 
+              placeholder="My Business Name" 
+              value={orgData.name}
+              onChange={(e) => setOrgData({ ...orgData, name: e.target.value })}
+              required
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -109,13 +203,25 @@ export function OnboardingPage() {
               <label className="block text-sm font-medium text-[var(--color-warm-dim)] mb-1.5">
                 {t('onboarding.business_name_si')}
               </label>
-              <input type="text" className="input-field" placeholder="සිංහල නම" />
+              <input 
+                type="text" 
+                className="input-field" 
+                placeholder="සිංහල නම" 
+                value={orgData.name_si}
+                onChange={(e) => setOrgData({ ...orgData, name_si: e.target.value })}
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-[var(--color-warm-dim)] mb-1.5">
                 {t('onboarding.business_name_ta')}
               </label>
-              <input type="text" className="input-field" placeholder="தமிழ் பெயர்" />
+              <input 
+                type="text" 
+                className="input-field" 
+                placeholder="தமிழ் பெயர்" 
+                value={orgData.name_ta}
+                onChange={(e) => setOrgData({ ...orgData, name_ta: e.target.value })}
+              />
             </div>
           </div>
 
@@ -127,10 +233,10 @@ export function OnboardingPage() {
               {businessTypes.map((type) => (
                 <button
                   key={type.id}
-                  onClick={() => setSelectedType(type.id)}
+                  onClick={() => setOrgData({ ...orgData, business_type: type.id })}
                   className={cn(
                     'p-3 rounded-xl border text-center transition-all',
-                    selectedType === type.id
+                    orgData.business_type === type.id
                       ? 'border-[var(--color-primary)] bg-[rgba(232,160,69,0.08)]'
                       : 'border-[var(--color-border)] hover:border-[var(--color-border-hover)]'
                   )}
@@ -146,10 +252,20 @@ export function OnboardingPage() {
             <label className="block text-sm font-medium text-[var(--color-warm-dim)] mb-1.5">
               VAT Number (Optional)
             </label>
-            <input type="text" className="input-field" placeholder="VAT Registration Number" />
+            <input 
+              type="text" 
+              className="input-field" 
+              placeholder="VAT Registration Number" 
+              value={orgData.vat_number}
+              onChange={(e) => setOrgData({ ...orgData, vat_number: e.target.value })}
+            />
           </div>
 
-          <button onClick={() => setStep(2)} className="btn-primary w-full py-3 flex items-center justify-center gap-2">
+          <button 
+            disabled={!orgData.name}
+            onClick={() => setStep(2)} 
+            className="btn-primary w-full py-3 flex items-center justify-center gap-2"
+          >
             {t('common.next')} <ArrowRight size={16} />
           </button>
         </div>
@@ -168,7 +284,14 @@ export function OnboardingPage() {
             </label>
             <div className="relative">
               <Building size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)]" />
-              <input type="text" className="input-field pl-10" placeholder="Main Branch" />
+              <input 
+                type="text" 
+                className="input-field pl-10" 
+                placeholder="Main Branch" 
+                value={branchData.name}
+                onChange={(e) => setBranchData({ ...branchData, name: e.target.value })}
+                required
+              />
             </div>
           </div>
 
@@ -178,12 +301,22 @@ export function OnboardingPage() {
             </label>
             <div className="relative">
               <MapPin size={16} className="absolute left-3 top-3 text-[var(--color-muted)]" />
-              <textarea className="input-field pl-10 min-h-[80px]" placeholder="123 Main Street, Colombo 03" />
+              <textarea 
+                className="input-field pl-10 min-h-[80px]" 
+                placeholder="123 Main Street, Colombo 03" 
+                value={branchData.address}
+                onChange={(e) => setBranchData({ ...branchData, address: e.target.value })}
+              />
             </div>
           </div>
 
           <label className="flex items-center gap-3 p-3 rounded-lg bg-[var(--color-dark-3)] cursor-pointer">
-            <input type="checkbox" defaultChecked className="w-4 h-4 accent-[var(--color-primary)]" />
+            <input 
+              type="checkbox" 
+              checked={branchData.is_headquarters}
+              onChange={(e) => setBranchData({ ...branchData, is_headquarters: e.target.checked })}
+              className="w-4 h-4 accent-[var(--color-primary)]" 
+            />
             <div>
               <p className="text-sm font-medium text-[var(--color-warm)]">{t('onboarding.is_headquarters')}</p>
               <p className="text-xs text-[var(--color-muted)]">Mark this as your main branch</p>
@@ -194,7 +327,11 @@ export function OnboardingPage() {
             <button onClick={() => setStep(1)} className="btn-ghost flex-1 flex items-center justify-center gap-2">
               <ArrowLeft size={16} /> {t('common.back')}
             </button>
-            <button onClick={() => setStep(3)} className="btn-primary flex-1 flex items-center justify-center gap-2">
+            <button 
+              disabled={!branchData.name}
+              onClick={() => setStep(3)} 
+              className="btn-primary flex-1 flex items-center justify-center gap-2"
+            >
               {t('common.next')} <ArrowRight size={16} />
             </button>
           </div>
@@ -267,12 +404,21 @@ export function OnboardingPage() {
             <button onClick={() => setStep(2)} className="btn-ghost flex-1 flex items-center justify-center gap-2">
               <ArrowLeft size={16} /> {t('common.back')}
             </button>
-            <Link to="/" className="btn-primary flex-1 flex items-center justify-center gap-2">
-              {t('onboarding.start_trial')} 🚀
-            </Link>
+            <button 
+              onClick={handleComplete}
+              disabled={isLoading}
+              className="btn-primary flex-1 flex items-center justify-center gap-2"
+            >
+              {isLoading ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <> {t('onboarding.start_trial')} 🚀 </>
+              )}
+            </button>
           </div>
         </div>
       )}
     </div>
   )
 }
+
