@@ -1,113 +1,139 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
-  LayoutDashboard,
-  ShoppingCart,
-  Package,
-  Receipt,
-  Truck,
-  Users,
-  Building2,
-  BookOpen,
-  UserCog,
-  FileBarChart,
-  GitBranch,
-  Settings,
-  Gem,
+  LayoutDashboard, ShoppingCart, Package, Receipt,
+  Truck, Users, Building2, BookOpen, UserCog,
+  FileBarChart, GitBranch, Settings,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
-
-interface NavGroup {
-  label: string
-  items: NavItem[]
-}
 
 interface NavItem {
   label: string
   path: string
-  icon: React.ReactNode
+  icon: React.ComponentType<{ size?: number }>
+  exact?: boolean
+}
+
+interface NavSection {
+  heading: string
+  items: NavItem[]
 }
 
 export function Sidebar() {
   const { t } = useTranslation()
   const location = useLocation()
 
-  const navGroups: NavGroup[] = [
+  const sections: NavSection[] = [
     {
-      label: 'CORE',
+      heading: 'Core',
       items: [
-        { label: t('nav.dashboard'), path: '/', icon: <LayoutDashboard /> },
-        { label: t('nav.pos'), path: '/pos', icon: <ShoppingCart /> },
-        { label: t('nav.inventory'), path: '/inventory/products', icon: <Package /> },
-        { label: t('nav.sales'), path: '/sales', icon: <Receipt /> },
-        { label: t('nav.purchases'), path: '/purchases', icon: <Truck /> },
-        { label: t('nav.customers'), path: '/customers', icon: <Users /> },
-        { label: t('nav.suppliers'), path: '/suppliers', icon: <Building2 /> },
+        { label: t('nav.dashboard', 'Dashboard'), path: '/dashboard', icon: LayoutDashboard, exact: true },
+        { label: t('nav.pos', 'Point of Sale'), path: '/pos', icon: ShoppingCart },
+        { label: t('nav.inventory', 'Inventory'), path: '/inventory', icon: Package },
+        { label: t('nav.sales', 'Sales'), path: '/sales', icon: Receipt },
+        { label: t('nav.purchases', 'Purchases'), path: '/purchases', icon: Truck },
+        { label: t('nav.customers', 'Customers'), path: '/customers', icon: Users },
+        { label: t('nav.suppliers', 'Suppliers'), path: '/suppliers', icon: Building2 },
       ],
     },
     {
-      label: 'FINANCE',
+      heading: 'Finance',
       items: [
-        { label: t('nav.accounting'), path: '/accounting/ledger', icon: <BookOpen /> },
+        { label: t('nav.accounting', 'Accounting'), path: '/accounting', icon: BookOpen },
       ],
     },
     {
-      label: 'HR',
+      heading: 'HR',
       items: [
-        { label: t('nav.employees'), path: '/hr/employees', icon: <UserCog /> },
+        { label: t('nav.employees', 'Employees'), path: '/hr/employees', icon: UserCog },
       ],
     },
     {
-      label: 'ANALYTICS',
+      heading: 'Analytics',
       items: [
-        { label: t('nav.reports'), path: '/reports', icon: <FileBarChart /> },
+        { label: t('nav.reports', 'Reports'), path: '/reports', icon: FileBarChart },
       ],
     },
     {
-      label: 'SYSTEM',
+      heading: 'System',
       items: [
-        { label: t('nav.branches'), path: '/branches', icon: <GitBranch /> },
-        { label: t('nav.settings'), path: '/settings', icon: <Settings /> },
+        { label: t('nav.branches', 'Branches'), path: '/branches', icon: GitBranch },
+        { label: t('nav.settings', 'Settings'), path: '/settings', icon: Settings },
       ],
     },
   ]
 
+  const isActive = (item: NavItem) => {
+    if (item.exact) return location.pathname === item.path
+    return location.pathname === item.path || location.pathname.startsWith(item.path + '/')
+  }
+
   return (
-    <aside className="sidebar flex flex-col">
-      <div className="flex items-center gap-3 px-[24px] py-[24px]">
-        <Gem size={20} className="text-[var(--color-accent)]" />
-        <h1 className="text-[16px] font-medium text-[#111827]">
-          CeylonMart
-        </h1>
+    <aside className="sidebar">
+      {/* Logo */}
+      <div className="sidebar-logo">
+        <div className="sidebar-logo-mark">
+          <Package size={16} />
+        </div>
+        <span className="sidebar-logo-text">Ceylon Mart</span>
       </div>
 
-      <nav className="flex-1 px-[16px] py-[10px] space-y-[24px]">
-        {navGroups.map((group) => (
-          <div key={group.label}>
-            <p className="px-[12px] mb-[8px] section-header">
-              {group.label}
-            </p>
-            <div className="space-y-[4px]">
-              {group.items.map((item) => {
-                const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
-                return (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    className={cn(
-                      'sidebar-nav-item',
-                      isActive && 'active'
-                    )}
-                  >
-                    {item.icon}
-                    <span>{item.label}</span>
-                  </NavLink>
-                )
-              })}
-            </div>
+      {/* Nav */}
+      <nav className="sidebar-nav">
+        {sections.map(section => (
+          <div key={section.heading} className="sidebar-section">
+            <p className="sidebar-section-label">{section.heading}</p>
+            {section.items.map(item => {
+              const active = isActive(item)
+              const Icon = item.icon
+              return (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  className={`sidebar-item${active ? ' active' : ''}`}
+                >
+                  <Icon size={16} />
+                  <span>{item.label}</span>
+                </NavLink>
+              )
+            })}
           </div>
         ))}
       </nav>
+
+      {/* Bottom: Plan badge */}
+      <div
+        style={{
+          padding: '16px',
+          borderTop: '1px solid var(--border-weak)',
+          flexShrink: 0,
+        }}
+      >
+        <div
+          style={{
+            padding: '12px',
+            background: 'var(--accent-muted)',
+            borderRadius: 'var(--r-md)',
+            border: '1px solid var(--accent-border, rgba(34, 197, 94, 0.1))',
+          }}
+        >
+          <p style={{
+            fontSize: '0.75rem',
+            fontWeight: 700,
+            color: 'var(--accent-text)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.02em',
+          }}>
+            Growth Plan
+          </p>
+          <p style={{
+            fontSize: '0.75rem',
+            color: 'var(--text-tertiary)',
+            marginTop: 2,
+          }}>
+            3 branches · 500+ sales
+          </p>
+        </div>
+      </div>
     </aside>
   )
 }
